@@ -49,20 +49,9 @@ loadTimesheets = function (exports) {
 
   // 出勤
   Timesheets.prototype.actionSignIn = function(username, message) {
-    if(this.datetime) {
-      var data = this.storage.get(username, this.datetime);
-      if(!data.signIn || data.signIn === '-') {
-        this.storage.set(username, this.datetime, {signIn: this.datetime});
-        this.responder.template("出勤", username, this.datetimeStr);
-      }
-      else {
-        // 更新の場合は時間を明示する必要がある
-        if(!!this.time) {
-          this.storage.set(username, this.datetime, {signIn: this.datetime});
-          this.responder.template("出勤更新", username, this.datetimeStr);
-        }
-      }
-    }
+    if(!this.datetime) { return }
+    this.storage.set(username, this.datetime, {signIn: this.datetime});
+    this.responder.template("出勤", username, this.datetimeStr);
   };
 
   // 退勤

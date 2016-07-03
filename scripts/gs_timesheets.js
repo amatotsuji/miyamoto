@@ -62,6 +62,28 @@ loadGSTimesheets = function () {
     return rowNo;
   };
 
+  GSTimesheets.prototype._getRowNoForSignIn = function(username) {
+    var sheet = this._getSheet(username);
+    return (sheet.getLastRow() + 1);
+  };
+
+  GSTimesheets.prototype._getRowNoForSignOut = function (username, date) {
+    var sheet = this._getSheet(username);
+    var lastRow = sheet.getLastRow();
+    var values = sheet.getRange("A1:A" + lastRow).getValues();
+    date = Utilities.formatDate(new Date(date), "JST", "yyyy-M-d")
+    for(var i = 0; i < lastRow ; i++) {
+      var key = Utilities.formatDate(new Date(values[i][0]), "JST", "yyyy-M-d")
+      if(key == date) {
+        var signOut = sheet.getRange("C" + (i+1)).getValue();
+        if(signOut == "") {
+          return (i + 1)
+        }
+      }
+    }
+    return lastRow;
+  };
+
   GSTimesheets.prototype.get = function(username, date) {
     var sheet = this._getSheet(username);
     var rowNo = this._getRowNo(username, date);
@@ -78,6 +100,11 @@ loadGSTimesheets = function () {
 
     var sheet = this._getSheet(username);
     var rowNo = this._getRowNo(username, date);
+    if (params['signIn'] != undefined) {
+      rowNo = this._getRowNoForSignIn(username);
+    } else if (params['signOut'] != undefined) {
+      rowNo = this._getRowNoForSignOut(username, date);
+    }
 
     var data = [DateUtils.toDate(date), row.signIn, row.signOut, row.note].map(function(v) {
       return v == null ? '' : v;
