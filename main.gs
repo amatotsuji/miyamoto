@@ -480,6 +480,28 @@ loadGSTimesheets = function () {
     return rowNo;
   };
 
+  GSTimesheets.prototype._getRowNoForSignIn = function(username) {
+    var sheet = this._getSheet(username);
+    return (sheet.getLastRow() + 1);
+  };
+
+  GSTimesheets.prototype._getRowNoForSignOut = function (username, date) {
+    var sheet = this._getSheet(username);
+    var lastRow = sheet.getLastRow();
+    var values = sheet.getRange("A1:A" + lastRow).getValues();
+    date = Utilities.formatDate(new Date(date), "JST", "yyyy-M-d")
+    for(var i = 0; i < lastRow ; i++) {
+      var key = Utilities.formatDate(new Date(values[i][0]), "JST", "yyyy-M-d")
+      if(key == date) {
+        var signOut = sheet.getRange("C" + (i+1)).getValue();
+        if(signOut == "") {
+          return (i + 1)
+        }
+      }
+    }
+    return lastRow;
+  };
+
   GSTimesheets.prototype.get = function(username, date) {
     var sheet = this._getSheet(username);
     var rowNo = this._getRowNo(username, date);
@@ -496,6 +518,11 @@ loadGSTimesheets = function () {
 
     var sheet = this._getSheet(username);
     var rowNo = this._getRowNo(username, date);
+    if (params['signIn'] != undefined) {
+      rowNo = this._getRowNoForSignIn(username);
+    } else if (params['signOut'] != undefined) {
+      rowNo = this._getRowNoForSignOut(username, date);
+    }
 
     var data = [DateUtils.toDate(date), row.signIn, row.signOut, row.note].map(function(v) {
       return v == null ? '' : v;
@@ -761,20 +788,9 @@ loadTimesheets = function (exports) {
 
   // 出勤
   Timesheets.prototype.actionSignIn = function(username, message) {
-    if(this.datetime) {
-      var data = this.storage.get(username, this.datetime);
-      if(!data.signIn || data.signIn === '-') {
-        this.storage.set(username, this.datetime, {signIn: this.datetime});
-        this.responder.template("出勤", username, this.datetimeStr);
-      }
-      else {
-        // 更新の場合は時間を明示する必要がある
-        if(!!this.time) {
-          this.storage.set(username, this.datetime, {signIn: this.datetime});
-          this.responder.template("出勤更新", username, this.datetimeStr);
-        }
-      }
-    }
+    if(!this.datetime) { return }
+    this.storage.set(username, this.datetime, {signIn: this.datetime});
+    this.responder.template("出勤", username, this.datetimeStr);
   };
 
   // 退勤
