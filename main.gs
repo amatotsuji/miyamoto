@@ -558,6 +558,16 @@ loadGSTimesheets = function () {
 if(typeof exports !== 'undefined') {
   exports.GSTimesheets = loadGSTimesheets();
 }
+// デバッグ用に。スプレッドシートにログを追記する
+// TODO: タイムスタンプするファイルと同じやつを使う
+
+var logSheetId;
+
+function logging(str) {
+  var sheet = SpreadsheetApp.openById(logSheetId).getActiveSheet();
+  var ts    = new Date().toLocaleString('japanese', {timeZone: 'Asia/Osaka'});
+  sheet.appendRow([ts, str]);
+}
 // 各モジュールの読み込み
 var initLibraries = function() {
   if(typeof EventListener === 'undefined') EventListener = loadEventListener();
@@ -676,12 +686,15 @@ function migrate() {
 
 
 
-/*
+
 function test1(e) {
   var miyamoto = init();
-  miyamoto.receiver.receiveMessage({user_name:"masuidrive", text:"hello 8:00"});
+  logSheetId = miyamoto.storage.settings.get('ログID');
+  Logger.log('ログID');
+  Logger.log(logSheetId);
+  miyamoto.receiver.receiveMessage({user_name:"masuidrive", text:"hello 2/28 8:00"});
 }
-*/
+
 // Slackのインタフェース
 // Slack = loadSlack();
 

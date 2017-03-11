@@ -116,9 +116,12 @@ function migrate() {
 
 
 
-/*
+
 function test1(e) {
   var miyamoto = init();
-  miyamoto.receiver.receiveMessage({user_name:"masuidrive", text:"hello 8:00"});
+  logSheetId = miyamoto.storage.settings.get('ログID');
+  Logger.log('ログID');
+  Logger.log(logSheetId);
+  miyamoto.receiver.receiveMessage({user_name:"masuidrive", text:"hello 2/28 8:00"});
 }
-*/
+
