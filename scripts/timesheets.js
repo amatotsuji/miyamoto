@@ -8,13 +8,13 @@ loadTimesheets = function (exports) {
     this.settings = settings;
 
     var self = this;
-    this.responder.on('receiveMessage', function(username, message) {
-      self.receiveMessage(username, message);
+    this.responder.on('receiveMessage', function(username, chanName, message) {
+      self.receiveMessage(username, chanName, message);
     });
   };
 
   // メッセージを受信する
-  Timesheets.prototype.receiveMessage = function(username, message) {
+  Timesheets.prototype.receiveMessage = function(username, chanName, message) {
     // 日付は先に処理しておく
     this.date = DateUtils.parseDate(message);
     this.time = DateUtils.parseTime(message);
@@ -43,7 +43,12 @@ loadTimesheets = function (exports) {
 
     // メッセージを実行
     if(command && this[command[0]]) {
-      return this[command[0]](username, message);
+      var needsChan = (command[0] == 'actionSignOut' || command[0] == 'actionSignIn');
+      var tab = username;
+      if (needsChan) {
+        tab = username + '(' + chanName + ')'
+      }
+      return this[command[0]](tab, message);
     }
   }
 

@@ -20,6 +20,7 @@ var init = function() {
     var spreadsheet = SpreadsheetApp.openById(spreadsheetId);
     var settings = new GSProperties(spreadsheet);
     var template = new GSTemplate(spreadsheet);
+    // TODO: 複数選べるように
     var slack = new Slack(settings.get('Slack Incoming URL'), template, settings);
     var storage = new GSTimesheets(spreadsheet, settings);
     var timesheets = new Timesheets(storage, settings, slack);
@@ -120,12 +121,20 @@ function migrate() {
 function test1(e) {
   var miyamoto = init();
   logSheetId = miyamoto.storage.settings.get('ログID');
-  miyamoto.receiver.receiveMessage({user_name:"masuidrive", text:"hello 2/28 8:00"});
+  miyamoto.receiver.receiveMessage({
+    user_name:"masuidrive",
+    text:"hello 2/28 8:00",
+    channel_name: 'hoge-timesheets'
+  });
 }
 
 function test2(e) {
   var miyamoto = init();
   logSheetId = miyamoto.storage.settings.get('ログID');
-  miyamoto.receiver.receiveMessage({user_name:"masuidrive", text:"おつ 2/28 9:00"});
+  miyamoto.receiver.receiveMessage({
+    user_name:"masuidrive",
+    text:"おつ 2/28 9:00",
+    channel_name: 'hoge-timesheets'
+  });
 }
 

@@ -596,6 +596,7 @@ var init = function() {
     var spreadsheet = SpreadsheetApp.openById(spreadsheetId);
     var settings = new GSProperties(spreadsheet);
     var template = new GSTemplate(spreadsheet);
+    // TODO: 複数選べるように
     var slack = new Slack(settings.get('Slack Incoming URL'), template, settings);
     var storage = new GSTimesheets(spreadsheet, settings);
     var timesheets = new Timesheets(storage, settings, slack);
@@ -696,13 +697,21 @@ function migrate() {
 function test1(e) {
   var miyamoto = init();
   logSheetId = miyamoto.storage.settings.get('ログID');
-  miyamoto.receiver.receiveMessage({user_name:"masuidrive", text:"hello 2/28 8:00"});
+  miyamoto.receiver.receiveMessage({
+    user_name:"masuidrive",
+    text:"hello 2/28 8:00",
+    channel_name: 'hoge-timesheets'
+  });
 }
 
 function test2(e) {
   var miyamoto = init();
   logSheetId = miyamoto.storage.settings.get('ログID');
-  miyamoto.receiver.receiveMessage({user_name:"masuidrive", text:"おつ 2/28 9:00"});
+  miyamoto.receiver.receiveMessage({
+    user_name:"masuidrive",
+    text:"おつ 2/28 9:00",
+    channel_name: 'hoge-timesheets'
+  });
 }
 
 // Slackのインタフェース
@@ -723,6 +732,7 @@ loadSlack = function () {
   Slack.prototype.receiveMessage = function(message) {
     var username = String(message.user_name);
     var body = String(message['text']);
+    var chan_name = String(message.channel_name);
 
     // 特定のアカウントには反応しない
     var ignore_users = (this.settings.get("無視するユーザ") || '').toLowerCase().replace(/^\s*(.*?)\s*$/, "$1").split(/\s*,\s*/);
@@ -731,7 +741,7 @@ loadSlack = function () {
     // -で始まるメッセージも無視
     if(body.match(/^-/)) return;
 
-    this.fireEvent('receiveMessage', username, body);
+    this.fireEvent('receiveMessage', username, chan_name, body);
   };
 
   // メッセージ送信
@@ -772,13 +782,13 @@ loadTimesheets = function (exports) {
     this.settings = settings;
 
     var self = this;
-    this.responder.on('receiveMessage', function(username, message) {
-      self.receiveMessage(username, message);
+    this.responder.on('receiveMessage', function(username, chanName, message) {
+      self.receiveMessage(username, chanName, message);
     });
   };
 
   // メッセージを受信する
-  Timesheets.prototype.receiveMessage = function(username, message) {
+  Timesheets.prototype.receiveMessage = function(username, chanName, message) {
     // 日付は先に処理しておく
     this.date = DateUtils.parseDate(message);
     this.time = DateUtils.parseTime(message);
@@ -807,7 +817,12 @@ loadTimesheets = function (exports) {
 
     // メッセージを実行
     if(command && this[command[0]]) {
-      return this[command[0]](username, message);
+      var needsChan = (command[0] == 'actionSignOut' || command[0] == 'actionSignIn');
+      var tab = username;
+      if (needsChan) {
+        tab = username + '(' + chanName + ')'
+      }
+      return this[command[0]](tab, message);
     }
   }
 

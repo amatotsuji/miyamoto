@@ -16,6 +16,7 @@ loadSlack = function () {
   Slack.prototype.receiveMessage = function(message) {
     var username = String(message.user_name);
     var body = String(message['text']);
+    var chan_name = String(message.channel_name);
 
     // 特定のアカウントには反応しない
     var ignore_users = (this.settings.get("無視するユーザ") || '').toLowerCase().replace(/^\s*(.*?)\s*$/, "$1").split(/\s*,\s*/);
@@ -24,7 +25,7 @@ loadSlack = function () {
     // -で始まるメッセージも無視
     if(body.match(/^-/)) return;
 
-    this.fireEvent('receiveMessage', username, body);
+    this.fireEvent('receiveMessage', username, chan_name, body);
   };
 
   // メッセージ送信
