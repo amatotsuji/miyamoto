@@ -84,9 +84,15 @@ loadGSTimesheets = function () {
     return lastRow;
   };
 
-  GSTimesheets.prototype.get = function(username, date) {
+  GSTimesheets.prototype.get = function(username, date, params) {
     var sheet = this._getSheet(username);
     var rowNo = this._getRowNo(username, date);
+    if (params && params['signIn'] != undefined) {
+      rowNo = this._getRowNoForSignIn(username);
+    } else if (params && params['signOut'] != undefined) {
+      rowNo = this._getRowNoForSignOut(username, date);
+    }
+
     var row = sheet.getRange("A"+rowNo+":"+String.fromCharCode(65 + this.scheme.columns.length - 1)+rowNo).getValues()[0].map(function(v) {
       return v === '' ? undefined : v;
     });
@@ -95,7 +101,7 @@ loadGSTimesheets = function () {
   };
 
   GSTimesheets.prototype.set = function(username, date, params) {
-    var row = this.get(username, date);
+    var row = this.get(username, date, params);
     _.extend(row, _.pick(params, 'signIn', 'signOut', 'note'));
 
     var sheet = this._getSheet(username);
